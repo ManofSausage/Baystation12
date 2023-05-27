@@ -201,6 +201,9 @@
 	data["blood_DNA"] = dna.unique_enzymes
 	data["blood_type"] = dna.b_type
 	data["species"] = species.name
+	data["full_DNA"] = dna
+	data["pronouns"] = src.pronouns
+	data["blood_real_name"] = dna.real_name
 	data["has_oxy"] = species.blood_oxy
 	var/list/temp_chem = list()
 	for(var/datum/reagent/R in reagents.reagent_list)
