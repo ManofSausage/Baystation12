@@ -21,6 +21,9 @@
 	///Extra descriptor added to artifact analyzer results.
 	var/damage_desc = "The physical structure appears indestructable."
 
+	//Whether the artifact is still dormant or has been awakened yet.
+	var/primary_effect_awakened = FALSE
+	var/secondary_effect_awakened = FALSE
 /obj/machinery/artifact/New()
 	..()
 

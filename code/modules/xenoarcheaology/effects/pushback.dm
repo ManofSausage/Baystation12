@@ -7,7 +7,9 @@
 
 /datum/artifact_effect/pushback/New()
 	..()
-	effect = pick(EFFECT_TOUCH, EFFECT_PULSE)
+	//effect = pick(EFFECT_TOUCH, EFFECT_PULSE)
+	//let's test making this work on touch only for NOW. Let it use pulse again in a bit, or maybe give some indication of whether pulse can be compatible
+	effect = EFFECT_TOUCH
 	throw_range = rand(1, 10)
 	damage = rand(30, 50)
 

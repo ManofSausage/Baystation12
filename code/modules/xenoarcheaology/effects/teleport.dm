@@ -1,6 +1,7 @@
 /datum/artifact_effect/teleport
 	name = "teleport"
 	effect_type = EFFECT_BLUESPACE
+	//effect_type = EFFECT_TOUCH
 	var/list/teleporting = list() //mobs waiting to be teleported
 
 /datum/artifact_effect/teleport/DoEffectTouch(mob/user)

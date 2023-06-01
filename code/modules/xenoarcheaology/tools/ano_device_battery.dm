@@ -13,6 +13,7 @@
 	icon_state = "anobattery[round(p,25)]"
 
 /obj/item/anobattery/proc/use_power(amount)
+	//I'm like 90% sure this accidentally compares 0 to a negative which means power never runs out FIX THIS
 	stored_charge = max(0, stored_charge - amount)
 
 /obj/item/anodevice
@@ -206,8 +207,10 @@
 /obj/item/anodevice/attack(mob/living/M as mob, mob/living/user as mob, def_zone)
 	if (!istype(M))
 		return
-
-	if(activated && inserted_battery.battery_effect.effect == EFFECT_TOUCH && !isnull(inserted_battery))
+	//fixed bug that made this impossible to ever use
+	//holy shit they all have doEffectTouch procs, why didn't I just copy that
+	if (!isnull(inserted_battery))
+	//if( inserted_battery.battery_effect.effect == EFFECT_TOUCH && !isnull(inserted_battery))
 		inserted_battery.battery_effect.DoEffectTouch(M)
 		inserted_battery.use_power(energy_consumed_on_touch)
 		user.visible_message(SPAN_NOTICE("[user] taps [M] with [src], and it shudders on contact."))
