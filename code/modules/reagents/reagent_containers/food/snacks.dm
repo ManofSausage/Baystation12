@@ -1354,8 +1354,8 @@
 	filling_color = "#adac7f"
 	center_of_mass = "x=16;y=14"
 
-	var/wrapped = 0
-	var/growing = 0
+	var/wrapped = FALSE
+	var/growing = FALSE
 	var/monkey_type = /mob/living/carbon/human/monkey
 
 /obj/item/reagent_containers/food/snacks/monkeycube/Initialize()
@@ -1368,7 +1368,7 @@
 
 /obj/item/reagent_containers/food/snacks/monkeycube/proc/Expand()
 	if(!growing)
-		growing = 1
+		growing = TRUE
 		src.visible_message(SPAN_NOTICE("\The [src] expands!"))
 		var/mob/monkey = new monkey_type
 		monkey.dropInto(src.loc)
@@ -1378,7 +1378,7 @@
 	icon_state = "monkeycube"
 	desc = "Just add water!"
 	to_chat(user, SPAN_NOTICE("You unwrap \the [src]."))
-	wrapped = 0
+	wrapped = FALSE
 	atom_flags |= ATOM_FLAG_OPEN_CONTAINER
 	var/trash = new /obj/item/trash/cubewrapper(get_turf(user))
 	user.put_in_hands(trash)
@@ -1413,7 +1413,7 @@
 	icon_state = "monkeycubewrap"
 	item_flags = 0
 	obj_flags = 0
-	wrapped = 1
+	wrapped = TRUE
 
 /obj/item/reagent_containers/food/snacks/monkeycube/farwacube
 	name = "farwa cube"
@@ -1477,22 +1477,38 @@
 	filling_color = "#adac7f"
 	center_of_mass = "x=16;y=14"
 
-	var/wrapped = 0
-	var/growing = 0
+	var/wrapped = FALSE
+	var/growing = FALSE
 	var/spawn_type = /mob/living/carbon/human
+
+/obj/item/reagent_containers/food/snacks/corpse_cube/use_tool(obj/item/device/dna_sampler/W, mob/user)
+	if(istype(W))
+		if (W.loaded == 1)
+			to_chat(user, "You inject the DNA sample into the cube.")
+			CorpseExpand(W.src_dna,W.src_name,W.src_species,W.src_pronouns,W.src_faction)
+			W.loaded = FALSE
+			W.icon_state = "dnainjector0"
+			W.src_dna = null
+			W.src_pronouns = ""
+			W.src_faction = ""
+			W.src_name = ""
+			W.src_species = ""
+		else
+			to_chat(user,"The cube doesn't so much as twitch without a DNA sample.")
+	return ..()
+
 
 /obj/item/reagent_containers/food/snacks/corpse_cube/Initialize()
 	.=..()
 	reagents.add_reagent(/datum/reagent/nutriment/protein, 10)
 
-
-/obj/item/reagent_containers/food/snacks/corpse_cube/proc/CorpseExpand(var/datum/source_DNA,var/datum/source_name,var/datum/source_species,var/datum/source_pronouns)
+/obj/item/reagent_containers/food/snacks/corpse_cube/proc/CorpseExpand(source_DNA,source_name,source_species,source_pronouns, source_faction)
 	if(!growing)
-		growing = 1
+		growing = TRUE
 		var/mob/living/carbon/human/H = new spawn_type
 		H.dna = source_DNA
-		//currently hardcoded since traitor item, but could be changed to use SSmob_list. No real good solution outside that or adding faction to blood and further bloating that.
-		H.faction = "crew"
+		playsound(loc, 'sound/effects/corpsecube.ogg', 60)
+		H.faction = source_faction
 		H.real_name = source_name
 		H.SetName(source_name)
 		H.dna.real_name = source_name
@@ -1507,21 +1523,6 @@
 		H.UpdateAppearance()
 		qdel(src)
 
-/obj/item/reagent_containers/food/snacks/corpse_cube/on_reagent_change()
-	var/datum/target_DNA = ""
-	var/datum/target_name = ""
-	var/datum/target_species = ""
-	var/datum/target_pronouns= ""
-	if(reagents.has_reagent(/datum/reagent/blood))
-		for(var/datum/reagent/blood/B in src.reagents.reagent_list)
-			target_DNA = B.data["full_DNA"]
-			target_name = B.data["blood_real_name"]
-			target_species = B.data["species"]
-			target_pronouns = B.data["pronouns"]
-		playsound(loc, 'sound/effects/corpsecube.ogg', 60)
-		sleep(2)
-		CorpseExpand(target_DNA,target_name,target_species,target_pronouns)
-
 /obj/item/reagent_containers/food/snacks/corpse_cube/OnConsume(mob/living/consumer, mob/living/feeder)
 	set waitfor = FALSE
 	if (ishuman(consumer))
@@ -1531,9 +1532,7 @@
 		var/obj/item/organ/external/unluckylimb1 = human.get_organ(pick(BP_ALL_LIMBS))
 		var/obj/item/organ/external/unluckylimb2 = human.get_organ(pick(BP_ALL_LIMBS))
 		organ.add_pain(30)
-		sleep(3 SECONDS)
 		organ.fracture()
-		sleep(3 SECONDS)
 		unluckylimb1.add_pain(50)
 		unluckylimb1.fracture()
 		unluckylimb2.add_pain(50)

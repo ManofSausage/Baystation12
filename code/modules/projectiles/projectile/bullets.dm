@@ -7,6 +7,7 @@
 	damage_flags = DAMAGE_FLAG_BULLET | DAMAGE_FLAG_SHARP
 	embed = TRUE
 	penetration_modifier = 1.0
+	space_knockback = 1
 	var/mob_passthrough_check = 0
 	var/is_pellet = FALSE
 
@@ -165,7 +166,6 @@
 	fire_sound = 'sound/weapons/gunshot/shotgun.ogg'
 	damage = 65
 	armor_penetration = 10
-	knockback = 1
 
 /obj/item/projectile/bullet/shotgun/beanbag		//because beanbags are not bullets
 	name = "beanbag"
@@ -186,7 +186,6 @@
 	pellets = 6
 	range_step = 1
 	spread_step = 50
-	knockback = 1
 
 /obj/item/projectile/bullet/pellet/shotgun/flechette
 	name = "flechette"
@@ -200,7 +199,6 @@
 	spread_step = 2
 	penetration_modifier = 0.5
 	hitchance_mod = 5
-	knockback = 0
 
 /* "Rifle" rounds */
 

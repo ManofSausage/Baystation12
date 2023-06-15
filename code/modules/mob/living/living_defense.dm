@@ -13,12 +13,6 @@
 		. = 1 - (1 - .) * (1 - armor_datum.get_blocked(damage_type, damage_flags, armor_pen, damage)) // multiply the amount we let through
 	. = min(1, .)
 
-
-/mob/living/proc/hit_impact(damage, dir)
-	if(incapacitated(INCAPACITATION_DEFAULT|INCAPACITATION_BUCKLED_PARTIALLY))
-		return
-	shake_animation(damage)
-
 /mob/living/proc/get_armors_by_zone(def_zone, damage_type, damage_flags)
 	. = list()
 	var/natural_armor = get_extension(src, /datum/extension/armor)
@@ -28,7 +22,6 @@
 		. += get_extension(psi, /datum/extension/armor)
 
 /mob/living/bullet_act(obj/item/projectile/P, def_zone)
-
 	if (status_flags & GODMODE)
 		return PROJECTILE_FORCE_MISS
 
@@ -43,14 +36,8 @@
 	var/damage = P.damage
 	var/flags = P.damage_flags()
 	var/damaged
-	var/hit_dir = get_dir(P, src)
-
-	if(P.knockback)
-		throw_at(get_edge_target_turf(src, hit_dir), P.knockback, P.knockback)
-
 	if(!P.nodamage)
 		damaged = apply_damage(damage, P.damage_type, def_zone, flags, P, P.armor_penetration)
-		hit_impact(P.damage, hit_dir)
 		bullet_impact_visuals(P, def_zone, damaged)
 	if(damaged || P.nodamage) // Run the block computation if we did damage or if we only use armor for effects (nodamage)
 		. = get_blocked_ratio(def_zone, P.damage_type, flags, P.armor_penetration, P.damage)
@@ -207,32 +194,39 @@
 			if (ai_holder)
 				ai_holder.react_to_attack(TT.thrower)
 
-		// Begin BS12 momentum-transfer code.
-		var/mass = 1.5
-		if(istype(O, /obj/item))
-			var/obj/item/I = O
-			mass = I.w_class/THROWNOBJ_KNOCKBACK_DIVISOR
-		var/momentum = TT.speed*mass
+		if(O.can_embed() && (throw_damage > 5*O.w_class)) //Handles embedding for non-humans and simple_animals.
+			embed(O)
 
-		if(momentum >= THROWNOBJ_KNOCKBACK_SPEED)
-			var/dir = TT.init_dir
+	process_momentum(AM, TT)
 
-			visible_message(SPAN_WARNING("\The [src] staggers under the impact!"),SPAN_WARNING("You stagger under the impact!"))
-			throw_at(get_edge_target_turf(src,dir),1,momentum)
+/mob/living/momentum_power(atom/movable/AM, datum/thrownthing/TT)
+	if(anchored || buckled)
+		return 0
 
-			if(!O || !src) return
+	. = (AM.get_mass()*TT.speed)/(get_mass()*min(AM.throw_speed,2))
+	if(has_gravity() || check_space_footing())
+		. *= 0.5
 
-			if(O.can_embed() && !(mob_flags & MOB_FLAG_UNPINNABLE)) //Projectile is suitable for pinning.
-				//Handles embedding for non-humans and simple_animals.
-				embed(O)
+/mob/living/momentum_do(power, datum/thrownthing/TT, atom/movable/AM)
+	if(power >= 0.75)		//snowflake to enable being pinned to walls
+		var/direction = TT.init_dir
+		throw_at(get_edge_target_turf(src, direction), min((TT.maxrange - TT.dist_travelled) * power, 10), throw_speed * min(power, 1.5), callback = new Callback(src,/mob/living/proc/pin_to_wall,AM,direction))
+		visible_message(SPAN_DANGER("\The [src] staggers under the impact!"),SPAN_DANGER("You stagger under the impact!"))
+		return
 
-				var/turf/T = near_wall(dir,2)
+	. = ..()
 
-				if(T)
-					forceMove(T)
-					visible_message(SPAN_WARNING("[src] is pinned to the wall by [O]!"),SPAN_WARNING("You are pinned to the wall by [O]!"))
-					anchored = TRUE
-					pinned += O
+/mob/living/proc/pin_to_wall(obj/O, direction)
+	if(!istype(O) || O.loc != src || !O.can_embed())//Projectile is suitable for pinning.
+		return
+
+	var/turf/T = near_wall(direction,2)
+
+	if(T)
+		forceMove(T)
+		visible_message(SPAN_DANGER("[src] is pinned to the wall by [O]!"),SPAN_DANGER("You are pinned to the wall by [O]!"))
+		src.anchored = TRUE
+		src.pinned += O
 
 /mob/living/proc/embed(obj/O, def_zone=null, datum/wound/supplied_wound)
 	O.forceMove(src)
