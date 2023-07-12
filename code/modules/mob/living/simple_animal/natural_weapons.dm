@@ -86,3 +86,13 @@
 
 /obj/item/natural_weapon/giant
 	force = 30
+
+/obj/item/natural_weapon/chimera_blade
+	name = "twitching appendage"
+	gender = NEUTER
+	attack_verb = list("sliced","jabbed","stabbed")
+	force = 15
+	damtype = DAMAGE_BRUTE
+	hitsound = 'sound/weapons/bladeslice.ogg'
+	edge = TRUE
+	show_in_message = TRUE
